@@ -1,6 +1,6 @@
 # Le compte est bon
 
-Le jeu du compte est bon sur Twitter, actuellement en ligne sur _[@comptebon](https://twitter.com/comptebon)_.
+Le jeu du compte est bon sur Twitter, actuellement en ligne sur _[@CompteBon](https://twitter.com/CompteBon)_.
 
 ### Fonctionnement
 

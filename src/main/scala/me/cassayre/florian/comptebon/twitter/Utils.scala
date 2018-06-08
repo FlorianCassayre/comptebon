@@ -6,7 +6,7 @@ object Utils {
 
   def mention(username: String): String = s"@$username"
 
-  def removeMentions(text: String): String = { // Their function is too complicated to actually distinguish all the case
+  def removeMentions(text: String): String = { // Their function is too complicated to actually distinguish all the cases
     text.replaceAll("@[A-Za-z0-9_]{1,20}", "")
   }
 
