@@ -18,7 +18,7 @@ Le programme se compile avec `sbt`.
 
 Pour générer un paquet `.jar` standalone, il vous faudra exécuter la commande suivante :
 ```
-sbt package
+sbt assembly
 ```
 Le paquet devrait ensuite se situer dans le répertoire `target/scala_X.X.X/comptebon-assembly-X.X.X.jar`.
 
