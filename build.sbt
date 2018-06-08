@@ -11,13 +11,8 @@ libraryDependencies += "com.typesafe" % "config" % "1.3.2"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test"
 
 lazy val commonSettings = Seq(
-  version := "1.0",
+  version := "1.0-SNAPSHOT",
   organization := "me.cassayre.florian",
   scalaVersion := "2.12.6",
   mainClass := Some("me.cassayre.florian.comptebon.Main")
-)
-
-scalacOptions ++= Seq(
-  "-feature",
-  "-language:implicitConversions"
 )
