@@ -24,7 +24,7 @@ class TwitterBot extends Actor {
   case object StartRound
 
   case class UserMention(tweet: Tweet)
-  case class CountdownEnd(forTweet: Tweet)
+  case class CountdownEnd(gameRef: AnyRef, forTweet: Tweet)
   case class ListenTo(gameRef: AnyRef, tweet: Tweet)
 
   // ---
@@ -124,7 +124,7 @@ class TwitterBot extends Actor {
 
               currentBestSolution = Some(tweet, expression)
 
-              context.system.scheduler.scheduleOnce(countdown)(self ! CountdownEnd(tweet))
+              context.system.scheduler.scheduleOnce(countdown)(self ! CountdownEnd(gameRef, tweet))
 
             }
 
@@ -138,7 +138,7 @@ class TwitterBot extends Actor {
 
       self ! ListenTo(gameRef, tweet)
 
-    case CountdownEnd(forTweet) if currentBestSolution.forall(_._1 == forTweet) =>
+    case CountdownEnd(ref, forTweet) if ref == gameRef && currentBestSolution.forall(_._1 == forTweet) =>
 
       val (bestTweet, bestExpression) = currentBestSolution.get
 
