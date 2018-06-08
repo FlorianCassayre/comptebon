@@ -6,6 +6,7 @@ import com.danielasfregola.twitter4s.{TwitterRestClient, TwitterStreamingClient}
 import me.cassayre.florian.comptebon.expression.{Expression, ExpressionParser, ExpressionValidator}
 import me.cassayre.florian.comptebon.game._
 import me.cassayre.florian.comptebon.twitter.Emojis._
+import me.cassayre.florian.comptebon.twitter.TwitterBot._
 import me.cassayre.florian.comptebon.twitter.Utils._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -19,15 +20,6 @@ class TwitterBot extends Actor {
   type TweetId = Long
   type AnswerScore = (Int, Int) // (distance, plates used)
 
-  // Events
-
-  case object StartRound
-
-  case class UserMention(tweet: Tweet)
-  case class CountdownEnd(gameRef: AnyRef, forTweet: Tweet)
-  case class ListenTo(gameRef: AnyRef, tweet: Tweet)
-
-  // ---
 
   val maxRetries = 5 // Over this limit, the application stops
 
@@ -59,7 +51,7 @@ class TwitterBot extends Actor {
   var currentBestSolution: Option[(Tweet, Expression)] = _
 
 
-  override def receive: Receive = awaitState
+  override def receive: Receive = preStartState // Wait for a `StartGame` packet
 
   /**
     * During this state the bot listens for replies
@@ -184,7 +176,19 @@ class TwitterBot extends Actor {
 
       context.become(roundState)
 
-    case _ => // Ignore
+    case UserMention | CountdownEnd | ListenTo => // Ignore
+  }
+
+  /**
+    * This state prevents calling start twice from outside
+    * @return
+    */
+  def preStartState: Receive = {
+    case StartGame =>
+      println("Starting game.")
+      self ! StartRound
+
+      context.become(awaitState)
   }
 
   def withRecovery[T](task: => Future[T], attempts: Int = maxRetries): Future[T] = {
@@ -198,14 +202,30 @@ class TwitterBot extends Actor {
 
   def generateDescription(played: String, counts: String): String = s"Jeu du compte est bon – $played parties jouées – $counts bons comptes réalisés"
 
-  println("Starting game.")
-
-  self ! StartRound // Bootstraps the game
-
 
   streamingClient.filterStatuses(follow = Seq(botId)) {
     case tweet: Tweet =>
       self ! UserMention(tweet)
   }
+
+  override def postStop(): Unit = { // Close streams
+    restClient.shutdown()
+    streamingClient.shutdown()
+    context.system.terminate()
+  }
+
+}
+
+object TwitterBot {
+
+  // Events
+
+  case object StartGame
+
+  private case object StartRound
+
+  private case class UserMention(tweet: Tweet)
+  private case class CountdownEnd(gameRef: AnyRef, forTweet: Tweet)
+  private case class ListenTo(gameRef: AnyRef, tweet: Tweet)
 
 }
