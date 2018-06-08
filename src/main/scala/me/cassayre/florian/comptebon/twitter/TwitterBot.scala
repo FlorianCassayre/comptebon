@@ -61,6 +61,8 @@ class TwitterBot extends Actor {
 
     case UserMention(tweet) if tweet.in_reply_to_status_id.isDefined && tweetsToListen.contains(tweet.in_reply_to_status_id.get) && tweet.user.forall(_.id != botId) =>
 
+      val currentRef = gameRef
+
       val withoutMentions = removeMentions(tweet.text)
 
       ExpressionParser.parseExpression(withoutMentions)
@@ -116,11 +118,11 @@ class TwitterBot extends Actor {
 
               currentBestSolution = Some(tweet, expression)
 
-              context.system.scheduler.scheduleOnce(countdown)(self ! CountdownEnd(gameRef, tweet))
+              context.system.scheduler.scheduleOnce(countdown)(self ! CountdownEnd(currentRef, tweet))
 
             }
 
-            withRecovery(restClient.createTweet(s"${mention(botUsername)} ${mention(user.screen_name)}\n$message\n\n$extra", in_reply_to_status_id = Some(tweet.id))).foreach(tweet => self ! ListenTo(gameRef, tweet))
+            withRecovery(restClient.createTweet(s"${mention(botUsername)} ${mention(user.screen_name)}\n$message\n\n$extra", in_reply_to_status_id = Some(tweet.id))).foreach(tweet => self ! ListenTo(currentRef, tweet))
           } // Else nothing
 
         case None =>
@@ -128,7 +130,7 @@ class TwitterBot extends Actor {
 
       }
 
-      self ! ListenTo(gameRef, tweet)
+      self ! ListenTo(currentRef, tweet)
 
     case CountdownEnd(ref, forTweet) if ref == gameRef && currentBestSolution.forall(_._1 == forTweet) =>
 
